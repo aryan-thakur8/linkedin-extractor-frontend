@@ -1,0 +1,641 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Employee Data Extractor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+          --color-primary: #0066cc;
+          --color-primary-hover: #0052a3;
+          --color-secondary: #64748b;
+          --color-secondary-hover: #475569;
+          --color-background: #f8fafc;
+          --color-card: #ffffff;
+          --color-text: #1e293b;
+          --color-text-light: #64748b;
+          --color-border: #e2e8f0;
+          --color-error: #ef4444;
+          --color-success: #10b981;
+          --border-radius: 8px;
+          --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: "Inter", sans-serif;
+          background-color: var(--color-background);
+          color: var(--color-text);
+          line-height: 1.6;
+        }
+
+        .container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 2rem 1rem;
+        }
+
+        .header {
+          text-align: center;
+          margin-bottom: 3rem;
+        }
+
+        .header h1 {
+          font-size: 2.5rem;
+          font-weight: 700;
+          margin-bottom: 0.5rem;
+          color: var(--color-primary);
+        }
+
+        .header p {
+          font-size: 1.2rem;
+          color: var(--color-text-light);
+        }
+
+        .search-section {
+          background-color: var(--color-card);
+          border-radius: var(--border-radius);
+          padding: 2rem;
+          box-shadow: var(--shadow);
+          margin-bottom: 2rem;
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+        }
+
+        label {
+          font-size: 0.9rem;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+          color: var(--color-text);
+        }
+
+        .required {
+          color: var(--color-error);
+        }
+
+        input {
+          padding: 0.75rem;
+          border: 2px solid var(--color-border);
+          border-radius: var(--border-radius);
+          font-size: 1rem;
+          font-family: inherit;
+          color: var(--color-text);
+          background-color: white;
+          transition: border-color 0.2s ease;
+        }
+
+        input:focus {
+          outline: none;
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+
+        .button-group {
+          display: flex;
+          justify-content: center;
+          gap: 1rem;
+        }
+
+        .btn {
+          padding: 0.875rem 2rem;
+          border: none;
+          border-radius: var(--border-radius);
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+          background-color: var(--color-primary);
+          color: white;
+        }
+
+        .btn-primary:hover {
+          background-color: var(--color-primary-hover);
+        }
+
+        .btn-secondary {
+          background-color: var(--color-secondary);
+          color: white;
+        }
+
+        .btn-secondary:hover {
+          background-color: var(--color-secondary-hover);
+        }
+
+        .results-section {
+          background-color: var(--color-card);
+          border-radius: var(--border-radius);
+          padding: 2rem;
+          box-shadow: var(--shadow);
+        }
+
+        .results-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 2rem;
+          padding-bottom: 1rem;
+          border-bottom: 2px solid var(--color-border);
+        }
+
+        .results-header h2 {
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: var(--color-primary);
+        }
+
+        .result-count {
+          font-size: 0.9rem;
+          color: var(--color-text-light);
+          font-weight: 500;
+        }
+
+        .loading-indicator {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 3rem 0;
+        }
+
+        .spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid rgba(0, 102, 204, 0.2);
+          border-top-color: var(--color-primary);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .error-message {
+          background-color: rgba(239, 68, 68, 0.1);
+          color: var(--color-error);
+          padding: 1rem;
+          border-radius: var(--border-radius);
+          margin-bottom: 1.5rem;
+          border-left: 4px solid var(--color-error);
+        }
+
+        .employee-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+          gap: 1.5rem;
+        }
+
+        .employee-card {
+          background-color: var(--color-card);
+          border-radius: var(--border-radius);
+          padding: 1.5rem;
+          box-shadow: var(--shadow);
+          border: 1px solid var(--color-border);
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .employee-card:hover {
+          transform: translateY(-4px);
+          box-shadow: var(--shadow-lg);
+        }
+
+        .employee-header {
+          display: flex;
+          align-items: center;
+          margin-bottom: 1.5rem;
+        }
+
+        .employee-avatar {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          background-color: var(--color-primary);
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.2rem;
+          font-weight: 600;
+          margin-right: 1rem;
+        }
+
+        .employee-info h3 {
+          font-size: 1.1rem;
+          font-weight: 600;
+          margin-bottom: 0.25rem;
+        }
+
+        .employee-position {
+          font-size: 0.9rem;
+          color: var(--color-text-light);
+          font-weight: 500;
+        }
+
+        .employee-details {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .detail-item {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .detail-label {
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--color-text-light);
+          margin-bottom: 0.25rem;
+          font-weight: 600;
+        }
+
+        .detail-value {
+          font-size: 0.9rem;
+        }
+
+        .detail-link {
+          color: var(--color-primary);
+          text-decoration: none;
+          font-weight: 500;
+        }
+
+        .detail-link:hover {
+          text-decoration: underline;
+        }
+
+        .footer {
+          text-align: center;
+          margin-top: 3rem;
+          padding-top: 2rem;
+          border-top: 1px solid var(--color-border);
+          color: var(--color-text-light);
+          font-size: 0.9rem;
+          font-weight: 500;
+        }
+
+        .hidden {
+          display: none;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+          .form-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .button-group {
+            flex-direction: column;
+          }
+
+          .btn {
+            width: 100%;
+          }
+
+          .employee-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .results-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+          }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>LinkedIn Employee Data Extractor</h1>
+            <p>Extract employee data from any company including position, LinkedIn URL, and email address</p>
+        </header>
+
+        <section class="search-section">
+            <form id="searchForm" class="search-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="company">Company Name <span class="required">*</span></label>
+                        <input type="text" id="company" placeholder="e.g., Google, Microsoft, Apple" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jobTitle">Job Title (Optional)</label>
+                        <input type="text" id="jobTitle" placeholder="e.g., Software Engineer, Marketing Manager">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location (Optional)</label>
+                        <input type="text" id="location" placeholder="e.g., San Francisco, New York">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="apiKey">API Key (Optional)</label>
+                        <input type="password" id="apiKey" placeholder="Enter your People Data Labs API key">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" id="demoButton">Load Demo Data</button>
+                    <button type="submit" class="btn btn-primary" id="searchButton">Extract Employee Data</button>
+                </div>
+            </form>
+        </section>
+
+        <section id="resultsSection" class="results-section hidden">
+            <div class="results-header">
+                <h2>Employee Data Results</h2>
+                <span id="resultCount" class="result-count"></span>
+            </div>
+            
+            <div id="loadingIndicator" class="loading-indicator hidden">
+                <div class="spinner"></div>
+                <p>Extracting employee data...</p>
+            </div>
+            
+            <div id="errorMessage" class="error-message hidden"></div>
+            
+            <div id="employeeGrid" class="employee-grid"></div>
+        </section>
+
+        <footer class="footer">
+            <p>Powered by Invesho AI, San Francisco, USA</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          // DOM elements
+          const searchForm = document.getElementById("searchForm")
+          const demoButton = document.getElementById("demoButton")
+          const resultsSection = document.getElementById("resultsSection")
+          const loadingIndicator = document.getElementById("loadingIndicator")
+          const errorMessage = document.getElementById("errorMessage")
+          const employeeGrid = document.getElementById("employeeGrid")
+          const resultCount = document.getElementById("resultCount")
+
+          // Backend API URL - UPDATE THIS AFTER DEPLOYING BACKEND TO RAILWAY
+          const BACKEND_URL = "linkedin-backend-production-b889.up.railway.app"
+
+          // Function to normalize LinkedIn URL
+          function normalizeLinkedInUrl(url) {
+            if (!url) return null;
+            let normalizedUrl = url.replace(/^\/+/, '');
+            if (!normalizedUrl.startsWith('http')) {
+              normalizedUrl = 'https://' + normalizedUrl;
+            }
+            return normalizedUrl;
+          }
+
+          // Event listeners
+          searchForm.addEventListener("submit", (e) => {
+            e.preventDefault()
+            extractEmployeeData()
+          })
+
+          demoButton.addEventListener("click", loadDemoData)
+
+          // Extract employee data function
+          async function extractEmployeeData() {
+            const company = document.getElementById("company").value.trim()
+            const apiKey = document.getElementById("apiKey").value.trim()
+
+            if (!company) {
+              showError("Company name is required")
+              return
+            }
+
+            const searchParams = {
+              company: company,
+              jobTitle: document.getElementById("jobTitle").value.trim(),
+              location: document.getElementById("location").value.trim(),
+            }
+
+            showLoading()
+
+            try {
+              const response = await fetch(BACKEND_URL, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  apiKey: apiKey,
+                  searchParams: searchParams,
+                }),
+              })
+
+              if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.details || errorData.error || "Data extraction failed")
+              }
+
+              const data = await response.json()
+
+              if (data.data && data.data.length > 0) {
+                displayResults(data.data, data.total)
+              } else {
+                showError("No employee data found for this company. Try a different company name.")
+              }
+            } catch (error) {
+              console.error("Extraction error:", error)
+              if (error.message.includes("fetch") || error.message.includes("Failed to fetch")) {
+                showError("Unable to connect to data extraction service. Please check your connection.")
+              } else {
+                showError(`Data extraction failed: ${error.message}`)
+              }
+            }
+
+            hideLoading()
+          }
+
+          // Load demo data function
+          function loadDemoData() {
+            const demoData = [
+              {
+                first_name: "Sarah",
+                last_name: "Johnson",
+                job_title: "Senior Software Engineer",
+                job_company_name: "Google",
+                linkedin_url: "linkedin.com/in/sarah-johnson-swe",
+                work_email: "sarah.johnson@google.com",
+              },
+              {
+                first_name: "Michael",
+                last_name: "Chen",
+                job_title: "Product Manager",
+                job_company_name: "Google",
+                linkedin_url: "linkedin.com/in/michael-chen-pm",
+                work_email: "m.chen@google.com",
+              },
+              {
+                first_name: "Emily",
+                last_name: "Rodriguez",
+                job_title: "Data Scientist",
+                job_company_name: "Google",
+                linkedin_url: "linkedin.com/in/emily-rodriguez-ds",
+                work_email: "emily.rodriguez@google.com",
+              },
+              {
+                first_name: "David",
+                last_name: "Kim",
+                job_title: "UX Designer",
+                job_company_name: "Google",
+                linkedin_url: "linkedin.com/in/david-kim-ux",
+                work_email: "david.kim@google.com",
+              },
+              {
+                first_name: "Priya",
+                last_name: "Patel",
+                job_title: "Marketing Director",
+                job_company_name: "Google",
+                linkedin_url: "linkedin.com/in/priya-patel-marketing",
+                work_email: "priya.patel@google.com",
+              },
+              {
+                first_name: "James",
+                last_name: "Wilson",
+                job_title: "DevOps Engineer",
+                job_company_name: "Google",
+                linkedin_url: "linkedin.com/in/james-wilson-devops",
+                work_email: "j.wilson@google.com",
+              },
+            ]
+
+            displayResults(demoData, demoData.length)
+          }
+
+          // Show loading state
+          function showLoading() {
+            resultsSection.classList.remove("hidden")
+            loadingIndicator.classList.remove("hidden")
+            employeeGrid.innerHTML = ""
+            errorMessage.classList.add("hidden")
+          }
+
+          // Hide loading state
+          function hideLoading() {
+            loadingIndicator.classList.add("hidden")
+          }
+
+          // Show error message
+          function showError(message) {
+            resultsSection.classList.remove("hidden")
+            errorMessage.textContent = message
+            errorMessage.classList.remove("hidden")
+            employeeGrid.innerHTML = ""
+          }
+
+          // Display results
+          function displayResults(employees, total) {
+            resultsSection.classList.remove("hidden")
+            resultCount.textContent = `Found ${total || employees.length} employees (showing ${employees.length})`
+
+            employeeGrid.innerHTML = ""
+
+            employees.forEach((employee) => {
+              const card = createEmployeeCard(employee)
+              employeeGrid.appendChild(card)
+            })
+
+            errorMessage.classList.add("hidden")
+          }
+
+          // Create employee card
+          function createEmployeeCard(employee) {
+            const card = document.createElement("div")
+            card.className = "employee-card"
+
+            const name = `${employee.first_name || ""} ${employee.last_name || ""}`.trim() || "Unknown"
+            const initials = name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .toUpperCase()
+              .slice(0, 2)
+
+            const linkedinUrl = normalizeLinkedInUrl(employee.linkedin_url);
+
+            card.innerHTML = `
+                    <div class="employee-header">
+                        <div class="employee-avatar">${initials}</div>
+                        <div class="employee-info">
+                            <h3>${name}</h3>
+                            <div class="employee-position">${employee.job_title || "Position not available"}</div>
+                        </div>
+                    </div>
+                    <div class="employee-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Company</span>
+                            <span class="detail-value">${employee.job_company_name || "Not specified"}</span>
+                        </div>
+                        ${
+                          employee.work_email
+                            ? `
+                        <div class="detail-item">
+                            <span class="detail-label">Email Address</span>
+                            <span class="detail-value">
+                                <a href="mailto:${employee.work_email}" class="detail-link">${employee.work_email}</a>
+                            </span>
+                        </div>
+                        `
+                            : `
+                        <div class="detail-item">
+                            <span class="detail-label">Email Address</span>
+                            <span class="detail-value">Not available</span>
+                        </div>
+                        `
+                        }
+                        ${
+                          linkedinUrl
+                            ? `
+                        <div class="detail-item">
+                            <span class="detail-label">LinkedIn Profile</span>
+                            <span class="detail-value">
+                                <a href="${linkedinUrl}" target="_blank" rel="noopener noreferrer" class="detail-link">View LinkedIn Profile</a>
+                            </span>
+                        </div>
+                        `
+                            : `
+                        <div class="detail-item">
+                            <span class="detail-label">LinkedIn Profile</span>
+                            <span class="detail-value">Not available</span>
+                        </div>
+                        `
+                        }
+                    </div>
+                `
+
+            return card
+          }
+        })
+    </script>
+</body>
+</html>
